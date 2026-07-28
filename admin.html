@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>YB Store Admin</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <style>
+      .admin-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.admin-header img {
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+}
+
+.admin-header h1 {
+  margin: 0;
+  color: #0b1130;
+}
+      body {
+        font-family: Arial;
+        background: #f4f7fb;
+        color: #0b1130;
+        max-width: 1100px;
+        margin: 30px auto;
+        padding: 20px;
+      }
+      .panel {
+        background: white;
+        padding: 24px;
+        border-radius: 16px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+      label {
+        display: grid;
+        gap: 6px;
+        font-weight: bold;
+      }
+      input,
+      select {
+        padding: 11px;
+        border: 1px solid #d9e1ee;
+        border-radius: 9px;
+        font: inherit;
+      }
+      button {
+        padding: 11px 16px;
+        border: 0;
+        border-radius: 9px;
+        background: #2f5fff;
+        color: white;
+        font-weight: bold;
+        margin: 10px 5px 10px 0;
+      }
+      .danger {
+        background: #dc2626;
+      }
+      .secondary {
+        background: #64748b;
+      }
+      .product {
+        display: flex;
+        justify-content: space-between;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 12px;
+        margin: 8px 0;
+      }
+      .message {
+        color: #b42318;
+        font-weight: bold;
+      }
+      @media (max-width: 650px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .product-filters {
+  display: flex;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.product-filters input,
+.product-filters select {
+  flex: 1;
+}
+
+@media (max-width: 650px) {
+  .product-filters {
+    flex-direction: column;
+  }
+}
+    </style>
+  </head>
+  <body>
+    <header class="admin-header">
+  <img src="assets/logos.png" alt="YB Computer Store">
+  <h1>Product Admin Panel</h1>
+  </header>
+    <section class="panel" id="loginPanel">
+      <div class="grid">
+        <label>Email<input id="email" type="email" /></label
+        ><label>Password<input id="password" type="password" /></label>
+      </div>
+      <button id="loginButton">Sign in</button>
+      <div id="loginMessage" class="message"></div>
+    </section>
+    <section class="panel" id="adminPanel" hidden>
+      <button class="secondary" id="logoutButton">Sign out</button>
+      <form id="productForm">
+        <input id="productId" type="hidden" />
+        <div class="grid">
+          <label>Name<input id="name" required /></label
+          ><label>Brand<input id="brand" required /></label
+          ><label>Category<select id="category" required></select></label
+          ><label>Price<input id="price" required /></label
+          ><label>Old price<input id="oldPrice" /></label
+          ><label>Badge<input id="badge" /></label
+          ><label>Image URL<input id="image" /></label
+          ><label
+            >Upload image<input
+              id="imageFile"
+              type="file"
+              accept="image/*" /></label
+          ><label>Color<input id="color" value="#2F5FFF" /></label
+          ><label>CPU / size<input id="cpu" /></label
+          ><label>RAM / resolution<input id="ram" /></label
+          ><label>Storage / refresh rate<input id="storage" /></label
+          ><label>GPU / ports<input id="gpu" /></label
+          ><label>Screen / features<input id="screen" /></label
+          ><label
+            >Available<select id="available">
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select></label
+          >
+        </div>
+        <button type="submit">Save product</button
+        ><button type="button" class="secondary" id="cancelButton">
+          Cancel
+        </button>
+        <div id="formMessage" class="message"></div>
+      </form>
+      <hr />
+      <h2>Categories</h2>
+      <input id="newCategory" placeholder="New category name" /><button
+        id="addCategoryButton"
+      >
+        Add category
+      </button>
+      <div id="categoriesList"></div>
+      <hr />
+      <h2>Products</h2>
+      <div class="product-filters">
+      <input
+          id="productSearch"
+          type="search"
+          placeholder="Search by product name or brand...">
+
+         <select id="productCategoryFilter">
+          <option value="">All categories</option>
+        </select>
+      </div>
+
+      <div id="productsList"></div>
+    </section>
+    <script>
+      const $ = (id) => document.getElementById(id);
+      let allProducts = [];
+       specs = ["cpu", "ram", "storage", "gpu", "screen"];
+      function msg(id, t) {
+        $(id).textContent = t || "";
+      }
+      function reset() {
+        $("productForm").reset();
+        $("productId").value = "";
+        $("color").value = "#2F5FFF";
+      }
+      async function loadCategories() {
+        const r = await supabaseClient
+          .from("categories")
+          .select("*")
+          .order("name");
+        if (r.error) return msg("formMessage", r.error.message);
+        $("category").innerHTML = r.data
+  .map(c => `<option value="${c.name}">${c.name}</option>`)
+  .join("");
+
+$("productCategoryFilter").innerHTML =
+  '<option value="">All categories</option>' +
+  r.data
+    .map(c => `<option value="${c.name}">${c.name}</option>`)
+    .join("");
+        $("categoriesList").innerHTML = r.data
+          .map(
+            (c) =>
+              `<div class="product"><span>${c.name}</span><button class="danger" data-cat="${c.id}">Delete</button></div>`,
+          )
+          .join("");
+        document.querySelectorAll("[data-cat]").forEach(
+          (b) =>
+            (b.onclick = async () => {
+              const x = await supabaseClient
+                .from("categories")
+                .delete()
+                .eq("id", b.dataset.cat);
+              if (x.error) msg("formMessage", x.error.message);
+              else loadCategories();
+            }),
+        );
+      }
+    
+
+async function loadProducts() {
+  const result = await supabaseClient
+    .from('products')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (result.error) {
+    msg('formMessage', result.error.message);
+    return;
+  }
+
+  allProducts = result.data;
+  renderProducts();
+}
+
+function renderProducts() {
+  const searchInput = document.getElementById('productSearch');
+  const categoryInput = document.getElementById('productCategoryFilter');
+  const productsList = document.getElementById('productsList');
+
+  const searchText = searchInput.value.trim().toLowerCase();
+  const selectedCategory = categoryInput.value;
+
+  const filteredProducts = allProducts.filter(product => {
+    const name = (product.name || '').toLowerCase();
+    const brand = (product.brand || '').toLowerCase();
+
+    const matchesSearch =
+      name.includes(searchText) ||
+      brand.includes(searchText);
+
+    const matchesCategory =
+      !selectedCategory ||
+      product.category === selectedCategory;
+
+    return matchesSearch && matchesCategory;
+  });
+
+  productsList.innerHTML = filteredProducts.map(product => `
+    <div class="product">
+      <span>
+        <b>${product.name}</b><br>
+        ${product.brand} - ${product.price}
+      </span>
+
+      <span>
+        <button data-edit="${product.id}">Edit</button>
+        <button class="danger" data-delete="${product.id}">
+          Delete
+        </button>
+      </span>
+    </div>
+  `).join('');
+
+  document.querySelectorAll('[data-edit]').forEach(button => {
+    button.onclick = () => {
+      edit(allProducts.find(product =>
+        product.id === button.dataset.edit
+      ));
+    };
+  });
+
+  document.querySelectorAll('[data-delete]').forEach(button => {
+    button.onclick = () => {
+      del(button.dataset.delete);
+    };
+  });
+}
+
+function renderProducts() {
+  const searchText = document
+    .getElementById('productSearch')
+    .value
+    .trim()
+    .toLowerCase();
+
+  const selectedCategory = document
+    .getElementById('productCategoryFilter')
+    .value;
+
+  const filteredProducts = allProducts.filter(product => {
+    const matchesSearch =
+      !searchText ||
+      product.name.toLowerCase().includes(searchText) ||
+      product.brand.toLowerCase().includes(searchText);
+
+    const matchesCategory =
+      !selectedCategory ||
+      product.category === selectedCategory;
+
+    return matchesSearch && matchesCategory;
+  });
+
+  document.getElementById('productsList').innerHTML =
+    filteredProducts.map(product => `
+      <div class="product">
+        <span>
+          <b>${product.name}</b><br>
+          ${product.brand} - ${product.price}
+        </span>
+
+        <span>
+          <button data-edit="${product.id}">Edit</button>
+          <button class="danger" data-delete="${product.id}">
+            Delete
+          </button>
+        </span>
+      </div>
+    `).join('');
+
+  document.querySelectorAll('[data-edit]').forEach(button => {
+    button.onclick = () => {
+      edit(allProducts.find(product =>
+        product.id === button.dataset.edit
+      ));
+    };
+  });
+
+  document.querySelectorAll('[data-delete]').forEach(button => {
+    button.onclick = () => {
+      del(button.dataset.delete);
+    };
+  });
+}
+document
+  .getElementById('productSearch')
+  .addEventListener('input', renderProducts);
+
+document
+  .getElementById('productCategoryFilter')
+  .addEventListener('change', renderProducts);
+
+      function edit(p) {
+        $("productId").value = p.id;
+        ["name", "brand", "price", "image", "color"].forEach(
+          (k) => ($(k).value = p[k] || ""),
+        );
+        $("category").value = p.category || "";
+        $("oldPrice").value = p.old_price || "";
+        $("badge").value = p.badge || "";
+        $("available").value = String(p.available);
+        specs.forEach((k) => ($(k).value = p.specs?.[k] || ""));
+      }
+      async function del(id) {
+        if (!confirm("Delete product?")) return;
+        const r = await supabaseClient.from("products").delete().eq("id", id);
+        if (r.error) msg("formMessage", r.error.message);
+        else loadProducts();
+      }
+      $("addCategoryButton").onclick = async () => {
+        const name = $("newCategory").value.trim();
+        if (!name) return;
+        const r = await supabaseClient.from("categories").insert({ name });
+        if (r.error) msg("formMessage", r.error.message);
+        else {
+          $("newCategory").value = "";
+          loadCategories();
+        }
+      };
+      $("loginButton").onclick = async () => {
+        const r = await supabaseClient.auth.signInWithPassword({
+          email: $("email").value,
+          password: $("password").value,
+        });
+        if (r.error) msg("loginMessage", r.error.message);
+        else show(true);
+      };
+      $("logoutButton").onclick = async () => {
+        await supabaseClient.auth.signOut();
+        show(false);
+      };
+      $("cancelButton").onclick = reset;
+      $("productForm").onsubmit = async (e) => {
+        e.preventDefault();
+        let image = $("image").value.trim(),
+          file = $("imageFile").files[0];
+        if (file) {
+          const path = crypto.randomUUID() + "-" + file.name;
+          const u = await supabaseClient.storage
+            .from("product-images")
+            .upload(path, file);
+          if (u.error) return msg("formMessage", u.error.message);
+          image = supabaseClient.storage
+            .from("product-images")
+            .getPublicUrl(path).data.publicUrl;
+        }
+        const id = $("productId").value || crypto.randomUUID(),
+          p = {
+            id,
+            name: $("name").value,
+            brand: $("brand").value,
+            category: $("category").value,
+            price: $("price").value,
+            old_price: $("oldPrice").value || null,
+            badge: $("badge").value || null,
+            image: image || null,
+            color: $("color").value,
+            specs: Object.fromEntries(specs.map((k) => [k, $(k).value])),
+            available: $("available").value === "true",
+          };
+        const r = $("productId").value
+          ? await supabaseClient.from("products").update(p).eq("id", id)
+          : await supabaseClient.from("products").insert(p);
+        if (r.error) msg("formMessage", r.error.message);
+        else {
+          msg("formMessage", "Saved");
+          reset();
+          loadProducts();
+        }
+      };
+      document
+  .getElementById('productSearch')
+  .addEventListener('input', renderProducts);
+
+document
+  .getElementById('productCategoryFilter')
+  .addEventListener('change', renderProducts);
+      function show(ok) {
+        $("loginPanel").hidden = ok;
+        $("adminPanel").hidden = !ok;
+        if (ok) {
+          loadCategories();
+          loadProducts();
+        }
+      }
+      supabaseClient.auth.getSession().then(({ data }) => show(!!data.session));
+    </script>
+  </body>
+</html>
