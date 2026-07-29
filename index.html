@@ -710,7 +710,7 @@
   let products = [];
 
  const supabaseUrl = 'https://qlteutiwpycwklxzzzhn.supabase.co';
- const supabaseAnonKey = 'esb_publishable_S7WhsOUwixPpk0gsGdyNOA_CDv23165';
+ const supabaseAnonKey = 'sb_publishable_S7WhsOUwixPpk0gsGdyNOA_CDv23165';
  const supabaseStore = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
  supabaseStore.from('products').select('*').order('created_at', {ascending:false})
    .then(({data, error}) => {
@@ -719,7 +719,7 @@
     initializeStore();
   })
   .catch(error => {
-    console.error('حدث خطأ أثناء تحميل المنتجات:', error);
+    console.error('حدث خطأ أثناء تحميل المنتجات:', error); 
   });
 
 function initializeStore() {
