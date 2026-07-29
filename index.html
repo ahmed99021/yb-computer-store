@@ -709,8 +709,8 @@
   ========================================================= */
   let products = [];
 
- const supabaseUrl = 'https://kivbdsqtjnpetcxkyqtf.supabase.co';
- const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpdmJkc3F0am5wZXRjeGt5cXRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUwNDkyNzcsImV4cCI6MjEwMDYyNTI3N30.pXq125OCJUYYK5AthbVIltvyQv92GO-TzLNUoHivn7E';
+ const supabaseUrl = 'https://qlteutiwpycwklxzzzhn.supabase.co';
+ const supabaseAnonKey = 'esb_publishable_S7WhsOUwixPpk0gsGdyNOA_CDv23165';
  const supabaseStore = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
  supabaseStore.from('products').select('*').order('created_at', {ascending:false})
    .then(({data, error}) => {
