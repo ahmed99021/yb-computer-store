@@ -366,26 +366,28 @@
 }
 
 .spec-list li {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  align-items: start;
   gap: 8px;
   min-width: 0;
   color: #64748b;
   font-size: 12px;
+  direction: rtl;
 }
 
 .spec-list li span {
-  white-space: nowrap;
+  white-space: normal;
+  text-align: right;
 }
 
 .spec-list li b {
   color: #0b1130;
   font-size: 13px;
-  text-align: right;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  text-align: left;
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
 }
   .card-footer{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:auto; padding-top:6px; border-top:1px dashed var(--line);}
   .price{font-family:'Space Grotesk'; font-weight:700; font-size:20px; color:var(--blue-deep);}
