@@ -304,7 +304,13 @@ function renderProducts() {
     <div class="product">
       <span>
         <b>${product.name}</b><br>
-        ${product.brand} - ${product.cpu || product.specs?.cpu || "No CPU info"}
+            ${product.brand} - ${
+              Object.entries(product.specs || {})
+                .filter(([, value]) => value)
+                .slice(0, 2)
+                .map(([field, value]) => `${field}: ${value}`)
+                .join(" • ") || "No specs"
+}
       </span>
 
       <span>
@@ -360,7 +366,13 @@ function renderProducts() {
       <div class="product">
         <span>
           <b>${product.name}</b><br>
-${product.brand} - ${product.cpu || product.specs?.cpu || "No CPU info"}
+            ${product.brand} - ${
+              Object.entries(product.specs || {})
+                .filter(([, value]) => value)
+                .slice(0, 2)
+                .map(([field, value]) => `${field}: ${value}`)
+                .join(" • ") || "No specs"
+}
         </span>
 
         <span>
