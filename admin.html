@@ -124,7 +124,7 @@
         <div class="grid">
           <label>Name<input id="name" required /></label
           ><label>Brand<input id="brand" required /></label
-          ><label>Category<select id="category" required></select></label
+          ><label>Category<select id="category" required onchange="toggleSpecFields()"></select></label
           ><label>Price<input id="price" required /></label
           ><label>Old price<input id="oldPrice" /></label
           ><label>Badge<input id="badge" /></label
@@ -135,11 +135,22 @@
               type="file"
               accept="image/*" /></label
           ><label>Color<input id="color" value="#2F5FFF" /></label
-          ><label>CPU / size<input id="cpu" /></label
-          ><label>RAM / resolution<input id="ram" /></label
-          ><label>Storage / refresh rate<input id="storage" /></label
-          ><label>GPU / ports<input id="gpu" /></label
-          ><label>Screen / features<input id="screen" /></label
+          <div id="computerSpecs">
+            <label>CPU <input id="cpu" /></label>
+            <label>RAM <input id="ram" /></label>
+            <label>Storage <input id="storage" /></label>
+            <label>GPU <input id="GPU" /></label>
+            <label>Screen <input id="screen" /></label>
+          </div>
+
+          <div id="monitorSpecs" hidden>
+            <label>Size <input id="monitorSize" /></label>
+            <label>Resolution <input id="monitorResolution" /></label>
+            <label>Refresh rate <input id="monitorRefreshRate" /></label>
+            <label>Panel type <input id="monitorPanel" /></label>
+            <label>Ports <input id="monitorPorts" /></label>
+            <label>Response time <input id="monitorResponseTime" /></label>
+          </div>
           ><label
             >Available<select id="available">
               <option value="true">Yes</option>
@@ -147,8 +158,8 @@
             </select></label
           >
         </div>
-        <button type="submit">Save product</button
-        ><button type="button" class="secondary" id="cancelButton">
+        <button type="submit">Save product</button>
+        <button type="button" class="secondary" id="cancelButton">
           Cancel
         </button>
         <div id="formMessage" class="message"></div>
@@ -420,8 +431,19 @@ document
             badge: $("badge").value || null,
             image: image || null,
             color: $("color").value,
-            specs: Object.fromEntries(specs.map((k) => [k, $(k).value])),
-            available: $("available").value === "true",
+            specs: ["screens", "monitors", "شاشات"].some(type => 
+            $("category").value.toLowerCase().includes(type)
+            )
+  ? {
+      size: $("monitorSize").value,
+      resolution: $("monitorResolution").value,
+      refresh_rate: $("monitorRefreshRate").value,
+      panel: $("monitorPanel").value,
+      ports: $("monitorPorts").value,
+      response_time: $("monitorResponseTime").value
+    }
+        : Object.fromEntries(specs.map((k) => [k, $(k).value])),    
+          available: $("available").value === "true",
           };
         const r = $("productId").value
           ? await supabaseClient.from("products").update(p).eq("id", id)
@@ -449,6 +471,29 @@ document
         }
       }
       supabaseClient.auth.getSession().then(({ data }) => show(!!data.session));
+    const categorySelect = document.getElementById("category");
+
+function toggleSpecFields() {
+  const computerSpecs = document.getElementById("computerSpecs");
+  const monitorSpecs = document.getElementById("MonitorsSpecs");
+
+  if (!categorySelect || !computerSpecs || !monitorSpecs) {
+    return;
+  }
+
+  const category = categorySelect.value.trim().toLowerCase();
+
+  const isMonitor =
+    category.includes("screen") ||
+    category.includes("monitor") ||
+    category.includes("شاشات");
+
+  computerSpecs.style.display = isMonitor ? "none" : "grid";
+  monitorSpecs.style.display = isMonitor ? "grid" : "none";
+}
+
+categorySelect.addEventListener("change", toggleSpecFields);
+toggleSpecFields();
     </script>
   </body>
 </html>
