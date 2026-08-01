@@ -356,38 +356,47 @@
 
   .card-title{font-family:'Space Grotesk'; font-size:18px; font-weight:700;}
   .card-sub{font-size:13px; color:var(--ink-soft);}
-  .spec-list {
+ .spec-list {
   list-style: none;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px 18px;
+  gap: 10px 16px;
   margin: 16px 0;
   padding: 0;
 }
 
 .spec-list li {
   display: grid;
-  grid-template-columns: 1fr 1.4fr;
+  grid-template-columns: auto 1fr;
   align-items: start;
   gap: 8px;
   min-width: 0;
   color: #64748b;
   font-size: 12px;
-  direction: rtl;
 }
 
 .spec-list li span {
-  white-space: normal;
-  text-align: right;
+  color: #64748b;
+  white-space: nowrap;
 }
 
 .spec-list li b {
   color: #0b1130;
   font-size: 13px;
-  text-align: left;
+  text-align: right;
   white-space: normal;
-  overflow: visible;
   overflow-wrap: anywhere;
+}
+
+.spec-list .spec-wide {
+  grid-column: 1 / -1;
+  grid-template-columns: 90px 1fr;
+  padding-top: 4px;
+  border-top: 1px dashed #dbe3ef;
+}
+
+.spec-list .spec-wide b {
+  text-align: left;
 }
   .card-footer{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:auto; padding-top:6px; border-top:1px dashed var(--line);}
   .price{font-family:'Space Grotesk'; font-weight:700; font-size:20px; color:var(--blue-deep);}
@@ -812,17 +821,23 @@ function initializeStore() {
   ${
     Object.entries(p.specs || {})
       .filter(([, value]) => value)
-      .map(
-        ([field, value]) => `
-          <li>
-            <span>${field}</span>
+      .map(([field, value]) => {
+        const label = field
+          .replace(/^fields:\s*/i, "")
+          .replaceAll("_", " ");
+
+        const isWide = field.toLowerCase().includes("port");
+
+        return `
+          <li class="${isWide ? "spec-wide" : ""}">
+            <span>${label}</span>
             <b>${value}</b>
           </li>
-        `
-      )
+        `;
+      })
       .join("")
   }
-</ul>
+</ul>   
         <div class="card-footer">
           <div class="price">${p.price} ج.م ${p.oldPrice ? `<span style="text-decoration:line-through">${p.oldPrice}</span>` : ''}</div>
           <a class="card-cta" href="${waLink(CONTACT.primary, msg)}" target="_blank" rel="noopener">راسلنا الآن</a>
