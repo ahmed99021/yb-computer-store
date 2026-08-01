@@ -373,8 +373,17 @@
   min-width: 0;
   color: #64748b;
   font-size: 12px;
+  direction: ltr;
+}
+.spec-label {
+  color: #64748b;
+  text-align: left;
 }
 
+.spec-value {
+  color: #0b1130;
+  text-align: left;
+}
 .spec-list li span {
   color: #64748b;
   white-space: nowrap;
@@ -830,9 +839,9 @@ function initializeStore() {
 
         return `
           <li class="${isWide ? "spec-wide" : ""}">
-            <span>${label}</span>
-            <b>${value}</b>
-          </li>
+  <span class="spec-label">${label}:</span>
+  <b class="spec-value">${value}</b>
+</li>
         `;
       })
       .join("")
