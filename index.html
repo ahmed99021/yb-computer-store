@@ -810,24 +810,17 @@ function initializeStore() {
         </div>
         <ul class="spec-list">
   ${
-    ["screens", "monitors", "شاشات"].some(type =>
-      (p.category || "").toLowerCase().includes(type)
-    )
-      ? `
-        <li><span>Size</span><b>${p.specs?.size || "-"}</b></li>
-        <li><span>Resolution</span><b>${p.specs?.resolution || "-"}</b></li>
-        <li><span>Refresh rate</span><b>${p.specs?.refresh_rate || "-"}</b></li>
-        <li><span>Panel</span><b>${p.specs?.panel || "-"}</b></li>
-        <li><span>Ports</span><b>${p.specs?.ports || "-"}</b></li>
-        <li><span>Response time</span><b>${p.specs?.response_time || "-"}</b></li>
-      `
-      : `
-        <li><span>CPU</span><b>${p.specs?.cpu || "-"}</b></li>
-        <li><span>Memory</span><b>${p.specs?.ram || "-"}</b></li>
-        <li><span>Storage</span><b>${p.specs?.storage || "-"}</b></li>
-        <li><span>Graphics</span><b>${p.specs?.gpu || "-"}</b></li>
-        <li><span>Display</span><b>${p.specs?.screen || "-"}</b></li>
-      `
+    Object.entries(p.specs || {})
+      .filter(([, value]) => value)
+      .map(
+        ([field, value]) => `
+          <li>
+            <span>${field}</span>
+            <b>${value}</b>
+          </li>
+        `
+      )
+      .join("")
   }
 </ul>
         <div class="card-footer">
