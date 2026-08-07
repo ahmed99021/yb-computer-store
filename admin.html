@@ -158,10 +158,9 @@
       <hr />
       <h2>Categories</h2>
       <input id="newCategory" placeholder="New category name" />
-      <input
-        id="newCategoryFields"
-        placeholder="Fields (comma-separated), e.g. cpu, ram, storage"
-      /><button
+      <input id="newCategoryImage" type="file" accept="image/*"/>
+      <input id="newCategoryFields" placeholder="Fields (comma-separated), e.g. cpu, ram, storage"/>
+      <button
         id="addCategoryButton"
       >
         Add category
@@ -439,10 +438,29 @@ document
           msg("formMessage", "Enter category name and at least one field");
           return;
         }
+        const imageFile = $("newCategoryImage").files[0];
+let categoryImage = null;
 
+if (imageFile) {
+  const fileName = `categories/${crypto.randomUUID()}-${imageFile.name}`;
+
+  const uploadResult = await supabaseClient.storage
+    .from("product-images")
+    .upload(fileName, imageFile);
+
+  if (uploadResult.error) {
+    return msg("formMessage", uploadResult.error.message);
+  }
+
+  categoryImage = supabaseClient.storage
+    .from("product-images")
+    .getPublicUrl(fileName)
+    .data.publicUrl;
+}
         const r = await supabaseClient.from("categories").insert({
           name,
           fields,
+          image: categoryImage
         });
         if (r.error) msg("formMessage", r.error.message);
         else {

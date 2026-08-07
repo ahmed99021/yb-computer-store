@@ -10,6 +10,94 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
+  .products-viewport,
+.product-grid {
+  direction: ltr;
+}
+
+.product-grid .card {
+  direction: rtl;
+}
+  .products-carousel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+}
+
+.products-viewport {
+  overflow: hidden;
+  width: 100%;
+}
+
+.product-grid {
+  display: flex !important;
+  gap: 20px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding: 10px 4px 20px;
+}
+
+.product-grid::-webkit-scrollbar {
+  display: none;
+}
+
+.product-grid .card {
+  flex: 0 0 calc((100% - 40px) / 3);
+  scroll-snap-align: start;
+}
+
+.carousel-arrow {
+  position: absolute;
+  z-index: 5;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 50%;
+  background: #2f5fff;
+  color: white;
+  font-size: 32px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(47, 95, 255, 0.3);
+}
+
+.carousel-arrow:hover {
+  background: #183fc7;
+}
+
+.carousel-prev {
+  left: -18px;
+}
+
+.carousel-next {
+  right: -18px;
+}
+
+@media (max-width: 900px) {
+  .product-grid .card {
+    flex-basis: calc((100% - 20px) / 2);
+  }
+}
+
+@media (max-width: 600px) {
+  .product-grid .card {
+    flex-basis: 100%;
+  }
+
+  .carousel-prev {
+    left: 4px;
+  }
+
+  .carousel-next {
+    right: 4px;
+  }
+}
   :root{
     --bg:#F6F8FC;
     --bg-panel:#FFFFFF;
@@ -48,7 +136,6 @@
     *{animation:none !important; transition:none !important;}
   }
 
-  /* ---------- NAV ---------- */
   header.nav{
     position:sticky; top:0; z-index:50;
     background:rgba(246,248,252,0.85);
@@ -114,7 +201,6 @@
   .burger{display:none; flex-direction:column; gap:5px; background:none;}
   .burger span{width:24px; height:2px; background:var(--ink); display:block; border-radius:2px;}
 
-  /* ---------- HERO ---------- */
   .hero{
     position:relative;
     padding:70px 24px 90px;
@@ -182,7 +268,6 @@
   font-size: 13px;
   color: var(--ink-soft);
 }
-  /* hero laptop mockup */
   .stage{
     position:relative;
     display:flex;
@@ -499,7 +584,6 @@
     nav.links{display:none;}
     .burger{display:flex;}
   }
-/* ===== Top Announcement Bar ===== */
 .top-bar{
     width:100%;
     height:40px;
@@ -637,8 +721,20 @@
       </div>
     </div>
 
-    <div class="grid" id="productGrid"></div>
+<div class="products-carousel">
+  <button class="carousel-arrow carousel-prev" id="carouselPrev">
+    ‹
+  </button>
+
+  <div class="products-viewport">
+    <div id="productGrid" class="product-grid"></div>
   </div>
+
+  <button class="carousel-arrow carousel-next" id="carouselNext">
+    ›
+  </button>
+</div>
+</div>
 </section>
 
 <section class="trust" id="why">
@@ -706,11 +802,7 @@
 <script>
   document.getElementById('year').textContent = new Date().getFullYear();
 
-  /* =========================================================
-     STORE CONTACT NUMBERS
-     رقم واتساب أساسي للطلبات + رقم ثاني للتواصل
-     صيغة الدولي لمصر: 20 + الرقم من غير الصفر الأول
-  ========================================================= */
+ 
   const CONTACT = {
     primary: '201115554181',
     secondary: '201001502410'
@@ -728,12 +820,7 @@
   document.getElementById('contactWa1').href = waLink(CONTACT.primary, defaultMsg);
   document.getElementById('contactWa2').href = waLink(CONTACT.secondary, defaultMsg);
 
-  /* =========================================================
-     المخزون — عدّل / أضف / احذف أي جهاز من المصفوفة دي
-     كل جهاز عبارة عن object بالمواصفات دي:
-     id, name, brand, price, oldPrice(اختياري), badge(اختياري),
-     specs: {cpu, ram, storage, gpu, screen}, color(لون توهج الكارت), available(true/false)
-  ========================================================= */
+  
   let products = [];
 
  const supabaseUrl = 'https://qlteutiwpycwklxzzzhn.supabase.co';
@@ -859,21 +946,16 @@ function initializeStore() {
   render();
 }
 
-/* ==============================
-   Infinite Announcement Bar
-============================== */
-
 const track = document.querySelector(".top-bar-track");
 
 if (track) {
 
-    // نكرر العنصر لحد ما يملى الشاشة
     while (track.scrollWidth < window.innerWidth * 3) {
         track.innerHTML += track.innerHTML;
     }
 
     let x = 0;
-    const speed = 0.7; // قلل الرقم لو عايزها أبطأ
+    const speed = 0.7; 
 
     function animateBar() {
 
@@ -918,6 +1000,52 @@ setInterval(() => {
       }, 300);
 
 }, 3000);
+function moveProducts(direction) {
+  const amount = productGrid.clientWidth * 0.85;
+
+  productGrid.scrollBy({
+    left: direction * amount,
+    behavior: "smooth"
+  });
+}
+
+carouselPrev.addEventListener("click", () => {
+  moveProducts(-1);
+});
+
+carouselNext.addEventListener("click", () => {
+  moveProducts(1);
+});
+let carouselTimer = setInterval(() => {
+  const atEnd =
+    productGrid.scrollLeft + productGrid.clientWidth >=
+    productGrid.scrollWidth - 10;
+
+  if (atEnd) {
+    productGrid.scrollTo({
+      left: 0,
+      behavior: "smooth"
+    });
+  } else {
+    moveProducts(1);
+  }
+}, 2500);
+
+
+productGrid.addEventListener("mouseleave", () => {
+  carouselTimer = setInterval(() => {
+    const cards = getProductCards();
+
+    if (!cards.length) return;
+
+    currentProductIndex =
+      currentProductIndex >= cards.length - 1
+        ? 0
+        : currentProductIndex + 1;
+
+    showProduct(currentProductIndex);
+  }, 2500);
+});
 </script>
 <script type="module" src="/src/main.js"></script>
 </body>
