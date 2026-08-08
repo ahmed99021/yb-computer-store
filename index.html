@@ -10,7 +10,55 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  .products-viewport,
+  .category-card.active {
+  border-color: #2f5fff;
+  box-shadow: 0 0 0 3px rgba(47, 95, 255, 0.15);
+  transform: translateY(-3px);
+}
+  #categoryCards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  margin: 20px 0 35px;
+}
+
+@media (max-width: 900px) {
+  #categoryCards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 500px) {
+  #categoryCards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+}
+.category-card {
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  background: white;
+  padding: 12px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.category-card img {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 12px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.category-card span {
+  display: block;
+  font-size: 42px;
+  margin-bottom: 10px;
+}
+
+.products-viewport,
 .product-grid {
   direction: ltr;
 }
@@ -714,7 +762,8 @@
     </div>
 
     <div class="controls">
-      <div class="chips" id="chips"></div>
+      <div class= "Catehories" id="categoryCards"></div>
+      <div class="chips" id="chips" hidden></div>
       <div class="search-box">
         <span>🔍</span>
         <input id="searchInput" type="text" placeholder="ابحث بالموديل أو المعالج...">
@@ -836,30 +885,64 @@
     console.error('حدث خطأ أثناء تحميل المنتجات:', error); 
   });
 
-function initializeStore() {
-
+async function initializeStore() {
+let activeBrand = "الكل";
+let activeCategory = null;
+let searchTerm = "";
   const categories = Array.from(new Set(products.map(p => p.category).filter(Boolean)));
-  const brands = [
-  'الكل',
-  ...categories,
-  ...Array.from(new Set(products.map(p => p.brand)))
-];
-  let activeBrand = 'الكل';
-  let searchTerm = '';
+const { data: categoryData, error: categoryError } =
+  await supabaseStore
+    .from("categories")
+    .select("name, image")
+    .order("name");
 
-  const chipsEl = document.getElementById('chips');
-  brands.forEach(b => {
-    const chip = document.createElement('button');
-    chip.className = 'chip' + (b === activeBrand ? ' active' : '');
-    chip.textContent = b;
-    chip.addEventListener('click', () => {
-      activeBrand = b;
-      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
-      render();
-    });
-    chipsEl.appendChild(chip);
+if (categoryError) {
+  console.error("Categories error:", categoryError);
+}
+
+const categoryCards = document.getElementById("categoryCards");
+
+categoryCards.innerHTML = (categoryData || []).map(category => `
+  <button class="category-card" data-category="${category.name}">
+    ${
+      category.image
+        ? `<img src="${category.image}" alt="${category.name}">`
+        : `<span>🖥️</span>`
+    }
+    <strong>${category.name}</strong>
+  </button>
+`).join("");
+
+categoryCards.querySelectorAll(".category-card").forEach(card => {
+  card.addEventListener("click", () => {
+  activeCategory = card.dataset.category;
+  activeBrand = "الكل";
+
+  document.querySelectorAll(".category-card").forEach(item => {
+    item.classList.remove("active");
   });
+
+  card.classList.add("active");
+
+  document.querySelectorAll(".chip").forEach(chip => {
+    chip.classList.remove("active");
+  });
+
+  render();
+
+  setTimeout(() => {
+    const stockSection = document.getElementById("stock");
+
+    if (stockSection) {
+      window.scrollTo({
+        top: stockSection.offsetTop - 80,
+        behavior: "smooth"
+      });
+    }
+  }, 100);
+});
+});
+
 
   document.getElementById('searchInput').addEventListener('input', (e) => {
     searchTerm = e.target.value.trim().toLowerCase();
@@ -883,13 +966,19 @@ function initializeStore() {
     const grid = document.getElementById('productGrid');
     grid.innerHTML = '';
     const filtered = products.filter(p => {
-    const matchBrand =
-      activeBrand === 'الكل' ||
-      (categories.includes(activeBrand) && p.category === activeBrand) ||
-      p.brand === activeBrand;      const hay = (p.name + ' ' + p.specs.cpu).toLowerCase();
-      const matchSearch = !searchTerm || hay.includes(searchTerm);
-      return matchBrand && matchSearch;
-    });
+  const matchesCategory =
+    !activeCategory || p.category === activeCategory;
+
+  const matchesBrand =
+    activeBrand === "الكل" ||
+    p.brand === activeBrand;
+
+  const matchesSearch =
+    !searchTerm ||
+    `${p.name} ${p.brand}`.toLowerCase().includes(searchTerm);
+
+  return matchesCategory && matchesBrand && matchesSearch;
+});
 
     document.getElementById('statCount').textContent = products.filter(p => p.available).length;
 
@@ -1029,11 +1118,15 @@ let carouselTimer = setInterval(() => {
   } else {
     moveProducts(1);
   }
-}, 2500);
+}, 5000);
 
 
 productGrid.addEventListener("mouseleave", () => {
   carouselTimer = setInterval(() => {
+    const productGrid = document.getElementById("productGrid");
+    function getProductCards() {
+  return productGrid.querySelectorAll(".card");
+}
     const cards = getProductCards();
 
     if (!cards.length) return;
@@ -1044,7 +1137,7 @@ productGrid.addEventListener("mouseleave", () => {
         : currentProductIndex + 1;
 
     showProduct(currentProductIndex);
-  }, 2500);
+  }, 5000);
 });
 </script>
 <script type="module" src="/src/main.js"></script>
