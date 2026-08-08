@@ -140,6 +140,7 @@
               id="imageFile"
               type="file"
               accept="image/*" /></label
+              
           ><label>Color<input id="color" value="#2F5FFF" /></label>
           <div id="categoryFields"></div>
           <label
@@ -460,6 +461,7 @@ document
 let categoryImage = null;
 
 if (imageFile) {
+  
   const fileName = `categories/${crypto.randomUUID()}-${imageFile.name}`;
   const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
   const maxSize = 5 * 1024 * 1024;
@@ -507,14 +509,41 @@ if (imageFile && imageFile.size > maxSize) {
       $("cancelButton").onclick = reset;
       $("productForm").onsubmit = async (e) => {
         e.preventDefault();
-        let image = $("image").value.trim(),
-          imageFile = $("imageFile").files[0];
+        let image = $("image").value.trim()
+          const imageFile = $("imageFile").files[0];
         if (imageFile) {
-          const extension = imageFile.name.split(".").pop().toLowerCase();
+        
+        const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+        const maxSize = 5 * 1024 * 1024; // 5 MB
+
+        if (!allowedTypes.includes(imageFile.type)) {
+          return msg(
+            "formMessage",
+            "Only JPG, PNG, and WEBP images are allowed."
+          );
+        }
+
+          if (imageFile.size > maxSize) {
+            return msg(
+              "formMessage",
+              "Image must be smaller than 5 MB."
+            );
+          }
+
+          const extension = imageFile.type.split("/")[1];
           const path = `${crypto.randomUUID()}.${extension}`;
-          const u = await supabaseClient.storage.from("product-images").upload(path, imageFile);
-          if (u.error) return msg("formMessage", u.error.message);
-          image = supabaseClient.storage.from("product-images").getPublicUrl(path).data.publicUrl;
+
+          const u = await supabaseClient.storage
+            .from("product-images")
+            .upload(path, imageFile);
+
+          if (u.error) {
+            return msg("formMessage", u.error.message);
+          }
+
+          image = supabaseClient.storage
+            .from("product-images")
+            .getPublicUrl(path).data.publicUrl;
         }
           const id = $("productId").value || crypto.randomUUID(),
           specs = Object.fromEntries(
