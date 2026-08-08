@@ -194,7 +194,7 @@
           .replaceAll("<", "&lt;")
           .replaceAll(">", "&gt;")
           .replaceAll('"', "&quot;")
-          .replaceAll("'", "&#39;");
+          .replaceAll("'", "&#039;");
       }
       function getSelectedCategoryFields(categoryName) {
         return categoriesByName[categoryName]?.fields || [];
@@ -217,6 +217,14 @@
           })
           .join("");
       }
+      function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
       function reset() {
         $("productForm").reset();
         $("productId").value = "";
@@ -232,21 +240,30 @@
         categoriesByName = Object.fromEntries(
           r.data.map((category) => [category.name, category]),
         );
-        $("category").innerHTML = r.data
-  .map(c => `<option value="${c.name}">${c.name}</option>`)
+        $("category").innerHTML = r.data.map(c =>`<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`
+)
   .join("");
 renderCategoryFields($("category").value);
 $("productCategoryFilter").innerHTML =
   '<option value="">All categories</option>' +
   r.data
-    .map(c => `<option value="${c.name}">${c.name}</option>`)
+    .map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`)
     .join("");
         $("categoriesList").innerHTML = r.data
-          .map(
-            (c) =>
-              `<div class="product"><span><b>${c.name}</b><br>${(c.fields || []).join(", ") || "No fields"}</span><button class="danger" data-cat="${c.id}">Delete</button></div>`,
-          )
-          .join("");
+  .map((c) => `
+    <div class="product">
+      <span>
+        <b>${escapeHtml(c.name)}</b><br>
+        ${escapeHtml((c.fields || []).join(", ") || "No fields")}
+      </span>
+      <button
+        class="danger"
+        data-cat="${escapeHtml(c.id)}">
+        Delete
+      </button>
+    </div>
+  `)
+  .join("");
         document.querySelectorAll("[data-cat]").forEach(
           (b) =>
             (b.onclick = async () => {
@@ -302,13 +319,14 @@ function renderProducts() {
   productsList.innerHTML = filteredProducts.map(product => `
     <div class="product">
       <span>
-        <b>${product.name}</b><br>
-            ${product.brand} - ${
-              Object.entries(product.specs || {})
-                .filter(([, value]) => value)
-                .slice(0, 2)
-                .map(([field, value]) => `${field}: ${value}`)
-                .join(" • ") || "No specs"
+        <b>${escapeHtml(product.name)}</b><br>
+          ${escapeHtml(product.brand)} - ${Object.entries(product.specs || {})
+            .filter(([, value]) => value)
+            .slice(0, 2)
+            .map(([field, value]) =>
+      `${escapeHtml(field)}: ${escapeHtml(value)}`
+    )
+    .join(" • ") || "No specs"
 }
       </span>
 
@@ -364,12 +382,12 @@ function renderProducts() {
     filteredProducts.map(product => `
       <div class="product">
         <span>
-          <b>${product.name}</b><br>
-            ${product.brand} - ${
+          <b>${escapeHtml(product.name)}</b><br>
+            ${escapeHtml(product.brand)} - ${
               Object.entries(product.specs || {})
                 .filter(([, value]) => value)
                 .slice(0, 2)
-                .map(([field, value]) => `${field}: ${value}`)
+                .map(([field, value]) => `${escapeHtml(field)}: ${escapeHtml(value)}`)
                 .join(" • ") || "No specs"
 }
         </span>
@@ -443,19 +461,23 @@ let categoryImage = null;
 
 if (imageFile) {
   const fileName = `categories/${crypto.randomUUID()}-${imageFile.name}`;
+  const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+  const maxSize = 5 * 1024 * 1024;
 
-  const uploadResult = await supabaseClient.storage
-    .from("product-images")
-    .upload(fileName, imageFile);
+if (imageFile && !allowedTypes.includes(imageFile.type)) {
+  return msg("formMessage", "Only JPG, PNG, and WEBP images are allowed");
+}
+
+if (imageFile && imageFile.size > maxSize) {
+  return msg("formMessage", "Image must be smaller than 5MB");
+}
+  const uploadResult = await supabaseClient.storage.from("product-images").upload(fileName, imageFile);
 
   if (uploadResult.error) {
     return msg("formMessage", uploadResult.error.message);
   }
 
-  categoryImage = supabaseClient.storage
-    .from("product-images")
-    .getPublicUrl(fileName)
-    .data.publicUrl;
+  categoryImage = supabaseClient.storage.from("product-images").getPublicUrl(fileName).data.publicUrl;
 }
         const r = await supabaseClient.from("categories").insert({
           name,
@@ -486,18 +508,15 @@ if (imageFile) {
       $("productForm").onsubmit = async (e) => {
         e.preventDefault();
         let image = $("image").value.trim(),
-          file = $("imageFile").files[0];
-        if (file) {
-          const path = crypto.randomUUID() + "-" + file.name;
-          const u = await supabaseClient.storage
-            .from("product-images")
-            .upload(path, file);
+          imageFile = $("imageFile").files[0];
+        if (imageFile) {
+          const extension = imageFile.name.split(".").pop().toLowerCase();
+          const path = `${crypto.randomUUID()}.${extension}`;
+          const u = await supabaseClient.storage.from("product-images").upload(path, imageFile);
           if (u.error) return msg("formMessage", u.error.message);
-          image = supabaseClient.storage
-            .from("product-images")
-            .getPublicUrl(path).data.publicUrl;
+          image = supabaseClient.storage.from("product-images").getPublicUrl(path).data.publicUrl;
         }
-        const id = $("productId").value || crypto.randomUUID(),
+          const id = $("productId").value || crypto.randomUUID(),
           specs = Object.fromEntries(
             Array.from(document.querySelectorAll("#categoryFields [data-spec-field]"))
               .map((input) => [input.dataset.specField, input.value]),
