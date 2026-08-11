@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>YB Computer Store | لابتوب مستعمل واستيراد بحالة ممتازة في دمياط</title>
 <meta name="description" content="YB Computer Store - لبيع اللابتوبات والكومبيوترات والشاشات المستوردة بحالة ممتازة في دمياط مع ضمان وتجربة قبل. لابتوبات مستعملة في دمياط. لابتوبات lenovo. لابتوبات HP. لابتوبات Dell. شاشات مستعملة. لابتوب مستعمل . YB Store. Computers. Monitors. Mouse. Screen. شاشة. Nevidia. Intel. RAM. CPU. GPU. Processor. بروسيسور. لابتوب استيراد. سعر الجملة. Keyboard. Gaming. LG. Thinkpad. YB.">
-<meta name="keywords" content= "YB Computer Store - لبيع اللابتوبات والكومبيوترات والشاشات المستوردة بحالة ممتازة في دمياط مع ضمان وتجربة قبل. لابتوبات مستعملة في دمياط. لابتوبات lenovo. لابتوبات HP. لابتوبات Dell. شاشات مستعملة. لابتوب مستعمل . YB Store. Computers. Monitors. Mouse. Screen. شاشة. Nevidia. Intel. RAM. CPU. GPU. Processor. بروسيسور. لابتوب استيراد. سعر الجملة. Keyboard. Gaming. LG. Thinkpad. YB.">
+<meta name="keywords" content= "YB Computer Store - لبيع اللابتوبات والكومبيوترات والشاشات المستوردة بحالة ممتازة في دمياط مع ضمان وتجربة قبل. لابتوبات مستعملة في دمياط. لابتوبات lenovo. لابتوبات HP. لابتوبات Dell. شاشات مستعملة. لابتوب مستعمل . YB Store. Computers. Monitors. Mouse. Screen. شاشة. Nevidia. Intel. RAM. CPU. GPU. Processor. بروسيسور. لابتوب استيراد. سعر الجملة. Keyboard. Gaming. LG. Thinkpad. YB. Workstation. Business.">
 <link rel="canonical" href="https://yb-store.com/" />
 <link rel="icon" type="image/png" href="assets/logos.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -41,13 +41,18 @@
   position: absolute;
   top: 12px;
   left: 15px;
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
+  padding: 0;
   border: 0;
   border-radius: 50%;
-  background: #dc2626;
+  background: #ef2222;
   color: white;
-  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  line-height: 1;
   cursor: pointer;
 }
 
@@ -1058,9 +1063,10 @@ categoryCards.querySelectorAll(".category-card").forEach(card => {
   });
 
   render();
+  });
   const detailsModal = document.getElementById("detailsModal");
-const detailsContent = document.getElementById("detailsContent");
-const closeDetails = document.getElementById("closeDetails");
+  const detailsContent = document.getElementById("detailsContent");
+  const closeDetails = document.getElementById("closeDetails");
 
 function openProductDetails(productId) {
   const product = products.find((item) => item.id === productId);
@@ -1135,7 +1141,7 @@ detailsModal.addEventListener("click", (event) => {
     }
   }, 100);
 });
-});
+
 
 
   document.getElementById('searchInput').addEventListener('input', (e) => {
