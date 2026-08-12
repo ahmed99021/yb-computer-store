@@ -384,13 +384,17 @@ function renderProducts() {
       <div class="product">
         <span>
           <b>${escapeHtml(product.name)}</b><br>
-            ${escapeHtml(product.brand)} - ${
-              Object.entries(product.specs || {})
-                .filter(([, value]) => value)
-                .slice(0, 2)
-                .map(([field, value]) => `${escapeHtml(field)}: ${escapeHtml(value)}`)
-                .join(" • ") || "No specs"
-}
+
+          ${escapeHtml(product.brand)} - ${Object.entries(product.specs || {})
+              .filter(([, value]) => value).slice(0, 2).map(([field, value]) => `${escapeHtml(field)}: ${escapeHtml(value)}`).join(" • ") || "No specs"
+          }
+
+          <br>
+          <strong style="color:#155eef;">
+            Price: ${escapeHtml(product.price || "Not set")} EGP
+          </strong>
+
+          
         </span>
 
         <span>
