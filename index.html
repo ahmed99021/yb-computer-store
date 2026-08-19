@@ -450,31 +450,25 @@
   font-size: 13px;
   color: var(--ink-soft);
 }
-  .stage{
-    position:relative;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:20px;
-    min-height:480px;
+  .stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  min-height: 360px;
 }
-  .stage-glow{
-    position:absolute; width:340px; height:340px; border-radius:50%;
-    background:radial-gradient(circle, rgba(0,217,192,0.35), transparent 70%);
-    filter:blur(10px);
-    animation:pulse 5s ease-in-out infinite;
-  }
-  .hero-banner{
-    width:100%;
-    max-width:650px;
-    display:block;
 
-    border-radius:24px;
-    overflow:hidden;
-
-    box-shadow:0 30px 80px rgba(0,0,0,.18);
-
-    transition:opacity .5s ease, transform .5s ease;
+.hero-banner {
+  width: 100%;
+  max-width: 480px;
+  max-height: 390px;
+  object-fit: contain;
+  display: block;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
+  transition: opacity 0.5s ease, transform 0.5s ease;
 }
   @keyframes pulse{0%,100%{transform:scale(1); opacity:0.9;} 50%{transform:scale(1.08); opacity:1;}}
   
@@ -849,6 +843,34 @@
   overflow: hidden;
 }
 
+.price-filter {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.price-filter input {
+  width: 140px;
+  padding: 11px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-family: inherit;
+  outline: none;
+}
+
+.price-filter input:focus {
+  border-color: var(--blue);
+}
+
+@media (max-width: 600px) {
+  .price-filter {
+    width: 100%;
+  }
+
+  .price-filter input {
+    width: 50%;
+  }
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -941,6 +963,11 @@
       <div class="search-box">
         <span>🔍</span>
         <input id="searchInput" type="text" placeholder="ابحث بالموديل أو المعالج...">
+      </div>
+
+      <div class="price-filter">
+        <input id="minPrice" type="number" placeholder="السعر من">
+        <input id="maxPrice" type="number" placeholder="السعر إلى">
       </div>
     </div>
 
@@ -1063,6 +1090,8 @@ async function initializeStore() {
 let activeBrand = "الكل";
 let activeCategory = null;
 let searchTerm = "";
+let minPrice = 0;
+let maxPrice = Infinity;
   const categories = Array.from(new Set(products.map(p => p.category).filter(Boolean)));
 const { data: categoryData, error: categoryError } =
   await supabaseStore
@@ -1188,6 +1217,15 @@ detailsModal.addEventListener("click", (event) => {
     searchTerm = e.target.value.trim().toLowerCase();
     render();
   });
+  document.getElementById("minPrice").addEventListener("input", (e) => {
+  minPrice = Number(e.target.value) || 0;
+  render();
+  });
+
+document.getElementById("maxPrice").addEventListener("input", (e) => {
+  maxPrice = Number(e.target.value) || Infinity;
+  render();
+  });
 
   const laptopSVG = `
     <svg viewBox="0 0 100 70" xmlns="http://www.w3.org/2000/svg">
@@ -1233,9 +1271,15 @@ detailsModal.addEventListener("click", (event) => {
 
   const matchesSearch =
     !searchTerm || searchableText.includes(searchTerm);
+    const productPrice = Number(
+  String(p.price).replace(/[^\d.]/g, "")
+);
 
-  return matchesCategory && matchesBrand && matchesSearch;
-});
+const matchesPrice =
+  productPrice >= minPrice && productPrice <= maxPrice;
+
+return matchesCategory && matchesBrand && matchesSearch && matchesPrice;
+      });
 
     document.getElementById('statCount').textContent = products.filter(p => p.available).length;
 
