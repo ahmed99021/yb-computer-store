@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://yb-store.com/sitemap.xml
